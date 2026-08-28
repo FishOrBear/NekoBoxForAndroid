@@ -423,6 +423,15 @@ class MainActivity : ThemedActivity(),
         }
     }
 
+    override fun cbProfileSelectionChanged(oldId: Long, newId: Long) {
+        DataStore.selectedProxy = newId
+        DataStore.currentProfile = newId
+        runOnDefaultDispatcher {
+            ProfileManager.postUpdate(oldId, true)
+            ProfileManager.postUpdate(newId, true)
+        }
+    }
+
     override fun onPreferenceDataStoreChanged(store: PreferenceDataStore, key: String) {
         when (key) {
             Key.SERVICE_MODE -> onBinderDied()

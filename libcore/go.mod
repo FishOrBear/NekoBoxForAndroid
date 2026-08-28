@@ -84,4 +84,4 @@ require (
 
 replace github.com/matsuridayo/libneko => ../../libneko
 
-replace github.com/sagernet/sing-box => ../../sing-box
+replace github.com/sagernet/sing-box => ../../sing-box-1.12

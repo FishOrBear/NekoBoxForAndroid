@@ -41,6 +41,11 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         DataStore.initGlobal()
         addPreferencesFromResource(R.xml.global_preferences)
 
+        findPreference<Preference>("networkSwitchSettings")!!.setOnPreferenceClickListener {
+            startActivity(Intent(requireContext(), NetworkSwitchActivity::class.java))
+            true
+        }
+
         val appTheme = findPreference<ColorPickerPreference>(Key.APP_THEME)!!
         appTheme.setOnPreferenceChangeListener { _, newTheme ->
             if (DataStore.serviceState.started) {

@@ -8,6 +8,11 @@
             app:key="isAutoConnect"
             app:summary="@string/auto_connect_summary"
             app:title="@string/auto_connect" />
+        <Preference
+            app:icon="@drawable/ic_device_data_usage"
+            app:key="networkSwitchSettings"
+            app:summary="@string/network_switch_settings_summary"
+            app:title="@string/network_switch_settings" />
         <moe.matsuri.nb4a.ui.ColorPickerPreference
             android:title="@string/theme"
             app:icon="@drawable/ic_baseline_color_lens_24"

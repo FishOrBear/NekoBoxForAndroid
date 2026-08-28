@@ -46,6 +46,11 @@ object Key {
     const val CONNECTION_TEST_URL = "connectionTestURL"
 
     const val NETWORK_CHANGE_RESET_CONNECTIONS = "networkChangeResetConnections"
+    const val NETWORK_SWITCH_ENABLED = "networkSwitchEnabled"
+    const val NETWORK_SWITCH_ON_START = "networkSwitchOnStart"
+    const val NETWORK_SWITCH_WIFI_DEFAULT = "networkSwitchWifiDefault"
+    const val NETWORK_SWITCH_CELLULAR = "networkSwitchCellular"
+    const val NETWORK_SWITCH_WIFI_RULES = "networkSwitchWifiRules"
     const val WAKE_RESET_CONNECTIONS = "wakeResetConnections"
     const val RULES_PROVIDER = "rulesProvider"
     const val LOG_LEVEL = "logLevel"
@@ -181,6 +186,7 @@ object Action {
     const val SERVICE = "io.nekohasekai.sagernet.SERVICE"
     const val CLOSE = "io.nekohasekai.sagernet.CLOSE"
     const val RELOAD = "io.nekohasekai.sagernet.RELOAD"
+    const val EXTRA_SKIP_NETWORK_START_RULE = "skip_network_start_rule"
 
     // const val SWITCH_WAKE_LOCK = "io.nekohasekai.sagernet.SWITCH_WAKELOCK"
     const val RESET_UPSTREAM_CONNECTIONS = "moe.nb4a.RESET_UPSTREAM_CONNECTIONS"

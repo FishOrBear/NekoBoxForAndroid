@@ -43,6 +43,7 @@ class SagerConnection(
         fun cbSpeedUpdate(stats: SpeedDisplayData) {}
         fun cbTrafficUpdate(data: TrafficData) {}
         fun cbSelectorUpdate(id: Long) {}
+        fun cbProfileSelectionChanged(oldId: Long, newId: Long) {}
 
         fun stateChanged(state: BaseService.State, profileName: String?, msg: String?)
 
@@ -90,6 +91,13 @@ class SagerConnection(
             val callback = callback ?: return
             runOnMainDispatcher {
                 callback.cbSelectorUpdate(id)
+            }
+        }
+
+        override fun cbProfileSelectionChanged(oldId: Long, newId: Long) {
+            val callback = callback ?: return
+            runOnMainDispatcher {
+                callback.cbProfileSelectionChanged(oldId, newId)
             }
         }
 

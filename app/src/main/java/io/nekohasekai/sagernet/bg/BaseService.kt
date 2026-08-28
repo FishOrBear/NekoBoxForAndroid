@@ -18,6 +18,7 @@ import io.nekohasekai.sagernet.database.SagerDatabase
 import io.nekohasekai.sagernet.ktx.*
 import io.nekohasekai.sagernet.plugin.PluginManager
 import io.nekohasekai.sagernet.utils.DefaultNetworkListener
+import io.nekohasekai.sagernet.utils.WifiNodeSwitchManager
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -194,7 +195,7 @@ class BaseService {
             }
             val s = data.state
             when {
-                s == State.Stopped -> startRunner()
+                s == State.Stopped -> startRunner(skipNetworkStartRule = true)
                 s.canStop -> stopRunner(true)
                 else -> Logs.w("Illegal state $s when invoking use")
             }
@@ -215,14 +216,19 @@ class BaseService {
             data.proxy!!.launch()
         }
 
-        fun startRunner() {
+        fun startRunner(skipNetworkStartRule: Boolean = false) {
             this as Context
-            if (Build.VERSION.SDK_INT >= 26) startForegroundService(Intent(this, javaClass))
-            else startService(Intent(this, javaClass))
+            val intent = Intent(this, javaClass).putExtra(
+                Action.EXTRA_SKIP_NETWORK_START_RULE,
+                skipNetworkStartRule,
+            )
+            if (Build.VERSION.SDK_INT >= 26) startForegroundService(intent)
+            else startService(intent)
         }
 
         fun killProcesses() {
             data.proxy?.close()
+            WifiNodeSwitchManager.stop()
             wakeLock?.apply {
                 release()
                 wakeLock = null
@@ -259,7 +265,7 @@ class BaseService {
                 // change the state
                 data.changeState(State.Stopped, msg)
                 // stop the service if nothing has bound to it
-                if (restart) startRunner() else {
+                if (restart) startRunner(skipNetworkStartRule = true) else {
                     stopSelf()
                 }
             }
@@ -273,7 +279,10 @@ class BaseService {
         var upstreamInterfaceName: String?
 
         suspend fun preInit() {
+            this as Context
+            WifiNodeSwitchManager.start(this)
             DefaultNetworkListener.start(this) {
+                WifiNodeSwitchManager.onNetworkChanged(this, it)
                 SagerNet.connectivity.getLinkProperties(it)?.also { link ->
                     SagerNet.underlyingNetwork = it
                     DataStore.vpnService?.updateUnderlyingNetwork()
@@ -314,8 +323,11 @@ class BaseService {
 
             val data = data
             if (data.state != State.Stopped) return Service.START_NOT_STICKY
-            val profile = SagerDatabase.proxyDao.getById(DataStore.selectedProxy)
             this as Context
+            if (intent?.getBooleanExtra(Action.EXTRA_SKIP_NETWORK_START_RULE, false) != true) {
+                WifiNodeSwitchManager.applyStartupRule(this)
+            }
+            val profile = SagerDatabase.proxyDao.getById(DataStore.selectedProxy)
             if (profile == null) { // gracefully shutdown: https://stackoverflow.com/q/47337857/2245107
                 data.notification = createNotification("")
                 stopRunner(false, getString(R.string.profile_empty))
