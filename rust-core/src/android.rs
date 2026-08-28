@@ -116,3 +116,15 @@ pub extern "system" fn Java_moe_matsuri_nb4a_qsocket_QSocketCore_trafficSnapshot
         .map(|value| value.into_raw())
         .unwrap_or(std::ptr::null_mut())
 }
+
+#[no_mangle]
+pub extern "system" fn Java_moe_matsuri_nb4a_qsocket_QSocketCore_isReady(
+    _env: JNIEnv,
+    _class: JClass,
+) -> jboolean {
+    if qsocket_core::mobile_proxy_ready() {
+        JNI_TRUE
+    } else {
+        JNI_FALSE
+    }
+}

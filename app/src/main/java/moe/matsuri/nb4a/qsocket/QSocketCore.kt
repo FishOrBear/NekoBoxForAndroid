@@ -12,6 +12,7 @@ object QSocketCore {
     private external fun start(configPath: String): Boolean
     external fun stop()
     external fun trafficSnapshot(): String?
+    external fun isReady(): Boolean
 
     /** 仅在当前选择的是自动生成的 QSocket 节点时启动 Rust 内核。 */
     fun startForProfile(context: Context, profile: ProxyEntity): Boolean {

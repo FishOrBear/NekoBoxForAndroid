@@ -24,6 +24,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import libcore.Libcore
 import moe.matsuri.nb4a.Protocols
+import moe.matsuri.nb4a.qsocket.QSocketCore
 import moe.matsuri.nb4a.qsocket.QSocketProfiles
 import moe.matsuri.nb4a.utils.Util
 import java.net.UnknownHostException
@@ -146,10 +147,21 @@ class BaseService {
                 error("core not started")
             }
             try {
+                val proxy = data!!.proxy!!
+                if (QSocketProfiles.isQSocket(proxy.profile) && !QSocketCore.isReady()) {
+                    // This first request starts the cold Rust proxy and waits for its
+                    // handshake. Its elapsed time must not become the displayed RTT.
+                    try {
+                        Libcore.urlTest(proxy.box, DataStore.connectionTestURL, 12000)
+                    } catch (e: Exception) {
+                        // A response-level failure may still leave the proxy usable.
+                        if (!QSocketCore.isReady()) throw e
+                    }
+                }
                 return Libcore.urlTest(
-                    data!!.proxy!!.box,
+                    proxy.box,
                     DataStore.connectionTestURL,
-                    if (QSocketProfiles.isQSocket(data!!.proxy!!.profile)) 12000 else 3000,
+                    3000,
                 )
             } catch (e: Exception) {
                 error(Protocols.genFriendlyMsg(e.readableMessage))
