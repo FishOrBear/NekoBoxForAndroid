@@ -42,6 +42,7 @@ object QSocketProfiles {
 
     suspend fun synchronize(context: Context) {
         val local = ensureConfigFiles(context)
+        QSocketTls.ensure(context)
         val root = runCatching { JSONObject(local.readText()) }.getOrElse { JSONObject() }
         val groupDao = SagerDatabase.groupDao
         val proxyDao = SagerDatabase.proxyDao

@@ -17,6 +17,7 @@ object QSocketCore {
     fun startForProfile(context: Context, profile: ProxyEntity): Boolean {
         if (!QSocketProfiles.isQSocket(profile)) return false
         val config = QSocketProfiles.ensureConfigFiles(context)
+        QSocketTls.ensure(context)
         return start(config.absolutePath)
     }
 }

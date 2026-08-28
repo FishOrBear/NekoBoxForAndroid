@@ -61,4 +61,6 @@ Android JNI 入口会强制启用移动端策略，即使配置文件来自桌�
 
 连接任意 QSocket 节点后，可访问 `https://qs.qcad.cc/config` 编辑配置；首次没有 TLS 证书时使用 `http://qs.qcad.cc/config`。配置页只允许编辑 `local.json` 和 `SLBConfig.json`，保存前会校验 JSON，并保留 `.bak` 备份。移动模式下面板仅监听回环地址。
 
+NekoBox 会兼容 TS 版本，从 `https://ct.qcad.cc:5443/ssl` 获取面板证书。应用启动及选择 QSocket 节点时会检查证书，正常情况下每 7 天最多刷新一次。下载内容只有在证书有效、包含 `qs.qcad.cc` 且证书与私钥匹配时才会写入 `files/qsocket/ssl/`；替换前保留上一版本，下载或校验失败时继续使用已有证书或 HTTP 配置入口。
+
 移动端策略和核心功能应在 `qsocket-tcp/rust-local` 中修改；NekoBox 侧只维护 JNI 生命周期、配置路径和 Android 日志桥接。
