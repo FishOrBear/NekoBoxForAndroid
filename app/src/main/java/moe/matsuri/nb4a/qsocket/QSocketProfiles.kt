@@ -2,6 +2,8 @@ package moe.matsuri.nb4a.qsocket
 
 import android.content.Context
 import io.nekohasekai.sagernet.GroupType
+import io.nekohasekai.sagernet.SagerNet
+import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.database.GroupManager
 import io.nekohasekai.sagernet.database.ProxyEntity
 import io.nekohasekai.sagernet.database.ProxyGroup
@@ -9,6 +11,7 @@ import io.nekohasekai.sagernet.database.SagerDatabase
 import io.nekohasekai.sagernet.fmt.socks.SOCKSBean
 import io.nekohasekai.sagernet.ktx.applyDefaultValues
 import org.json.JSONObject
+import kotlinx.coroutines.delay
 import java.io.File
 
 object QSocketProfiles {
@@ -92,4 +95,26 @@ object QSocketProfiles {
         }
         GroupManager.postReload(group.id)
     }
+
+    suspend fun watch(context: Context) {
+        val directory = File(context.filesDir, "qsocket")
+        var version = configVersion(directory)
+        while (true) {
+            delay(1_000)
+            val current = configVersion(directory)
+            if (current == version) continue
+            delay(500)
+            version = configVersion(directory)
+            synchronize(context)
+            val selected = SagerDatabase.proxyDao.getById(DataStore.selectedProxy)
+            if (DataStore.serviceState.started && selected?.let(::isQSocket) == true) {
+                SagerNet.reloadService()
+            }
+        }
+    }
+
+    private fun configVersion(directory: File): Long = listOf(
+        File(directory, "local.json"),
+        File(directory, "SLBConfig.json"),
+    ).fold(0L) { value, file -> value xor file.lastModified() xor file.length() }
 }

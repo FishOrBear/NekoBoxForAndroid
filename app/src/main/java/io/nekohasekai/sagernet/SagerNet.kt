@@ -90,6 +90,9 @@ class SagerNet : Application(),
 
                 updateNotificationChannels()
             }
+            runOnDefaultDispatcher {
+                QSocketProfiles.watch(this@SagerNet)
+            }
         }
 
         if (BuildConfig.DEBUG) {

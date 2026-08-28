@@ -6,11 +6,17 @@ use jni::{
 use std::{
     path::PathBuf,
     sync::{Mutex, Once},
+    thread::JoinHandle,
 };
 use tokio::sync::oneshot;
 
 static LOGGING: Once = Once::new();
-static CONTROL: Mutex<Option<oneshot::Sender<()>>> = Mutex::new(None);
+struct Control {
+    shutdown: oneshot::Sender<()>,
+    thread: JoinHandle<()>,
+}
+
+static CONTROL: Mutex<Option<Control>> = Mutex::new(None);
 
 #[no_mangle]
 pub extern "system" fn Java_moe_matsuri_nb4a_qsocket_QSocketCore_start(
@@ -31,8 +37,14 @@ pub extern "system" fn Java_moe_matsuri_nb4a_qsocket_QSocketCore_start(
     let mut control = CONTROL
         .lock()
         .unwrap_or_else(|poisoned| poisoned.into_inner());
-    if control.is_some() {
+    if control
+        .as_ref()
+        .is_some_and(|value| !value.thread.is_finished())
+    {
         return JNI_TRUE;
+    }
+    if let Some(previous) = control.take() {
+        let _ = previous.thread.join();
     }
 
     LOGGING.call_once(|| {
@@ -42,9 +54,7 @@ pub extern "system" fn Java_moe_matsuri_nb4a_qsocket_QSocketCore_start(
             .try_init();
     });
     let (shutdown_tx, shutdown_rx) = oneshot::channel();
-    *control = Some(shutdown_tx);
-
-    std::thread::Builder::new()
+    let thread = std::thread::Builder::new()
         .name("qsocket-local".into())
         .spawn(move || {
             let runtime = match tokio::runtime::Builder::new_multi_thread()
@@ -69,12 +79,17 @@ pub extern "system" fn Java_moe_matsuri_nb4a_qsocket_QSocketCore_start(
                 }
             });
         })
-        .is_ok()
-        .then_some(JNI_TRUE)
-        .unwrap_or_else(|| {
-            *control = None;
-            JNI_FALSE
-        })
+        .ok();
+    match thread {
+        Some(thread) => {
+            *control = Some(Control {
+                shutdown: shutdown_tx,
+                thread,
+            });
+            JNI_TRUE
+        }
+        None => JNI_FALSE,
+    }
 }
 
 #[no_mangle]
@@ -82,12 +97,13 @@ pub extern "system" fn Java_moe_matsuri_nb4a_qsocket_QSocketCore_stop(
     _env: JNIEnv,
     _class: JClass,
 ) {
-    if let Some(shutdown) = CONTROL
+    if let Some(control) = CONTROL
         .lock()
         .unwrap_or_else(|poisoned| poisoned.into_inner())
         .take()
     {
-        let _ = shutdown.send(());
+        let _ = control.shutdown.send(());
+        let _ = control.thread.join();
     }
 }
 
