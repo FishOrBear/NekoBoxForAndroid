@@ -82,6 +82,7 @@ object QSocketProfiles {
         ).also { it.id = groupDao.createGroup(it) }
 
         val wanted = linkedMapOf(AUTO_UUID to ("自动负载均衡" to root.optInt("slbSocksListen", 3902)))
+        val nodes = mutableListOf<Triple<Double, Int, Pair<String, Int>>>()
         val servers = root.optJSONArray("servers")
         if (servers != null) {
             for (index in 0 until servers.length()) {
@@ -91,10 +92,16 @@ object QSocketProfiles {
                 val listen = server.optInt("listen")
                 val socksPort = 2000 + listen - 39000
                 if (name.isNotEmpty() && socksPort in 1..65535) {
-                    wanted["qsocket:node:$name"] = name to socksPort
+                    val latency = server.optDouble("time", Double.POSITIVE_INFINITY)
+                        .takeIf { it.isFinite() && it >= 0.0 }
+                        ?: Double.POSITIVE_INFINITY
+                    nodes += Triple(latency, index, name to socksPort)
                 }
             }
         }
+        nodes.sortedWith(compareBy<Triple<Double, Int, Pair<String, Int>>> { it.first }
+            .thenBy { it.second })
+            .forEach { (_, _, node) -> wanted["qsocket:node:${node.first}"] = node }
 
         val existing = proxyDao.getByGroup(group.id).filter(::isQSocket).associateBy { it.uuid }
         existing.filterKeys { it !in wanted }.values.forEach { proxyDao.deleteProxy(it) }
