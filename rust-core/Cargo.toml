@@ -1,0 +1,20 @@
+[package]
+name = "qsocket-android"
+version = "0.1.0"
+edition = "2021"
+description = "NekoBox Android JNI wrapper for QSocket Local"
+license = "MIT"
+
+[lib]
+name = "qsocket_local"
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+qsocket_core = { package = "qsocket-local", path = "../third_party/qsocket-tcp/rust-local" }
+tokio = { version = "1.40", features = ["rt-multi-thread", "sync"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[target.'cfg(target_os = "android")'.dependencies]
+jni = "0.21"

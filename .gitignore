@@ -17,6 +17,7 @@ jniLibs/
 /nkmr
 /.gopath/
 /.tools/
+/rust-core/target/
 
 # submodules
 /external

@@ -1,0 +1,3 @@
+[submodule "qsocket-tcp"]
+	path = third_party/qsocket-tcp
+	url = https://github.com/FishOrBear/qsocket-tcp.git

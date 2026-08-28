@@ -22,6 +22,7 @@ import kotlinx.coroutines.*
 import libcore.BoxInstance
 import libcore.Libcore
 import moe.matsuri.nb4a.net.LocalResolverImpl
+import moe.matsuri.nb4a.qsocket.QSocketCore
 import java.io.File
 
 abstract class BoxInstance(
@@ -90,6 +91,7 @@ abstract class BoxInstance(
     }
 
     override fun launch() {
+        QSocketCore.startIfConfigured(SagerNet.application)
         // TODO move, this is not box
         val cacheDir = File(SagerNet.application.cacheDir, "tmpcfg")
         cacheDir.mkdirs()
@@ -204,6 +206,7 @@ abstract class BoxInstance(
 
     @Suppress("EXPERIMENTAL_API_USAGE")
     override fun close() {
+        QSocketCore.stop()
         for (instance in externalInstances.values) {
             runCatching {
                 instance.close()
