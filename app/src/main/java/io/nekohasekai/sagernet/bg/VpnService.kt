@@ -165,9 +165,9 @@ class VpnService : BaseVpnService(),
             val added = mutableListOf<String>()
 
             individual.apply {
-                // Allow Matsuri itself using VPN.
+                // 嵌入式 QSocket Rust 核心与 VPN 服务同属本应用进程。
+                // 本应用不能再次进入 TUN，否则 Rust 出站会回到 SLB 形成无限回环。
                 remove(packageName)
-                if (!bypass) add(packageName)
             }.forEach {
                 try {
                     if (bypass) {
@@ -182,10 +182,14 @@ class VpnService : BaseVpnService(),
             }
 
             if (bypass) {
+                builder.addDisallowedApplication(packageName)
                 Logs.d("Add bypass: ${added.joinToString(", ")}")
             } else {
                 Logs.d("Add allow: ${added.joinToString(", ")}")
             }
+        } else {
+            // 未启用分应用代理时也显式保护本应用的原生出站。
+            builder.addDisallowedApplication(packageName)
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && DataStore.appendHttpProxy) {
