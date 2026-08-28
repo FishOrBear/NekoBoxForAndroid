@@ -39,6 +39,7 @@ import moe.matsuri.nb4a.proxy.config.ConfigBean
 import moe.matsuri.nb4a.proxy.config.ConfigSettingActivity
 import moe.matsuri.nb4a.proxy.neko.*
 import moe.matsuri.nb4a.proxy.shadowtls.ShadowTLSSettingsActivity
+import moe.matsuri.nb4a.qsocket.QSocketSettingsActivity
 
 @Entity(
     tableName = "proxy_entities", indices = [Index("groupId", name = "groupId")]
@@ -180,7 +181,7 @@ data class ProxyEntity(
         }
     }
 
-    fun displayType(): String = when (type) {
+    fun displayType(): String = if (uuid.startsWith("qsocket:")) "QSocket" else when (type) {
         TYPE_SOCKS -> socksBean!!.protocolName()
         TYPE_HTTP -> if (httpBean!!.isTLS()) "HTTPS" else "HTTP"
         TYPE_SS -> "Shadowsocks"
@@ -453,6 +454,9 @@ data class ProxyEntity(
     }
 
     fun settingIntent(ctx: Context, isSubscription: Boolean): Intent {
+        if (uuid.startsWith("qsocket:")) {
+            return Intent(ctx, QSocketSettingsActivity::class.java)
+        }
         return Intent(
             ctx, when (type) {
                 TYPE_SOCKS -> SocksSettingsActivity::class.java

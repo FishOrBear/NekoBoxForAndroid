@@ -204,6 +204,9 @@
             android:name="moe.matsuri.nb4a.proxy.config.ConfigSettingActivity"
             android:configChanges="uiMode" />
         <activity
+            android:name="moe.matsuri.nb4a.qsocket.QSocketSettingsActivity"
+            android:configChanges="uiMode" />
+        <activity
             android:name="io.nekohasekai.sagernet.ui.GroupSettingsActivity"
             android:configChanges="uiMode" />
         <activity

@@ -32,6 +32,11 @@ object QSocketProfiles {
             local.writeText(
                 """{
   "servers": [],
+  "mobileMaxProxies": 8,
+  "mobileIdleTimeoutSeconds": 45,
+  "mobileRotationIntervalSeconds": 300,
+  "slbAllowLan": false,
+  "dashboardAllowLan": false,
   "slbListen": 39002,
   "slbSocksListen": 3902,
   "slbConfigPath": "SLBConfig.json",
