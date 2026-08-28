@@ -140,7 +140,8 @@ fun buildConfig(
     val directDNS = DataStore.directDns.split("\n")
         .mapNotNull { dns -> dns.trim().takeIf { it.isNotBlank() && !it.startsWith("#") } }
     val enableDnsRouting = DataStore.enableDnsRouting
-    val useFakeDns = DataStore.enableFakeDns && !forTest
+    // QSocket 需要保留域名给 Rust SLB 做路由，qs.qcad.cc 还是不依赖公网 DNS 的虚拟面板域名。
+    val useFakeDns = (DataStore.enableFakeDns || QSocketProfiles.isQSocket(proxy)) && !forTest
     val needSniff = DataStore.trafficSniffing > 0
     val needSniffOverride = DataStore.trafficSniffing == 2
     val externalIndexMap = ArrayList<IndexEntity>()
