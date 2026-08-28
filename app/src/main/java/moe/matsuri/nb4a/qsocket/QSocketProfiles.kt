@@ -18,11 +18,13 @@ object QSocketProfiles {
     private const val GROUP_NAME = "QSocket"
     private const val UUID_PREFIX = "qsocket:"
     private const val AUTO_UUID = "qsocket:auto"
+    private const val PANEL_ASSET_VERSION = "19e2eb20d476d97abd10"
 
     fun isQSocket(profile: ProxyEntity): Boolean = profile.uuid.startsWith(UUID_PREFIX)
 
     fun ensureConfigFiles(context: Context): File {
         val directory = File(context.filesDir, "qsocket").apply { mkdirs() }
+        ensurePanelAssets(context, directory)
         val local = File(directory, "local.json")
         val slb = File(directory, "SLBConfig.json")
         if (!slb.exists()) slb.writeText("{}\n")
@@ -40,6 +42,29 @@ object QSocketProfiles {
             )
         }
         return local
+    }
+
+    private fun ensurePanelAssets(context: Context, directory: File) {
+        val output = File(directory, "public")
+        val marker = File(output, ".version")
+        if (marker.takeIf(File::isFile)?.readText()?.trim() == PANEL_ASSET_VERSION) return
+        copyAssetDirectory(context, "qsocket-public", output)
+        marker.writeText("$PANEL_ASSET_VERSION\n")
+    }
+
+    private fun copyAssetDirectory(context: Context, assetPath: String, output: File) {
+        output.mkdirs()
+        context.assets.list(assetPath).orEmpty().forEach { name ->
+            val childAsset = "$assetPath/$name"
+            val children = context.assets.list(childAsset).orEmpty()
+            if (children.isNotEmpty()) {
+                copyAssetDirectory(context, childAsset, File(output, name))
+            } else {
+                context.assets.open(childAsset).use { input ->
+                    File(output, name).outputStream().use(input::copyTo)
+                }
+            }
+        }
     }
 
     suspend fun synchronize(context: Context) {
