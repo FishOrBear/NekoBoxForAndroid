@@ -20,6 +20,31 @@ git submodule update --init --recursive
 
 脚本会为 NekoBox 支持的四种 Android ABI 构建 `libqsocket_local.so`，并复制到对应的 `app/src/main/jniLibs` 目录。
 
+## 本机离线构建缓存
+
+当前 Windows 开发机的工具链和缓存都在 H 盘：
+
+```text
+JAVA_HOME=H:\Android\jdk17\jdk-17.0.20.1+1
+ANDROID_HOME=H:\Android\sdk
+GRADLE_USER_HOME=H:\Android\gradle
+CARGO_HOME=H:\Android\cargo
+Rust target=H:\Android\rust-target\nekobox
+Gradle 8.10.2=H:\Android\gradle\wrapper\dists\gradle-8.10.2-bin\4wo97fu1tyk151i6mla8ts8s6\gradle-8.10.2
+```
+
+仓库的 Gradle wrapper 可能因为缺少完成标记而重复尝试下载。复用已解压缓存时，在 PowerShell 中执行：
+
+```powershell
+$env:JAVA_HOME = 'H:\Android\jdk17\jdk-17.0.20.1+1'
+$env:ANDROID_HOME = 'H:\Android\sdk'
+$env:GRADLE_USER_HOME = 'H:\Android\gradle'
+$env:Path = "$env:JAVA_HOME\bin;$env:Path"
+& 'H:\Android\gradle\wrapper\dists\gradle-8.10.2-bin\4wo97fu1tyk151i6mla8ts8s6\gradle-8.10.2\bin\gradle.bat' :app:compileOssDebugKotlin --offline
+```
+
+除非明确需要更新依赖，否则后续构建优先使用上述离线命令，不再运行会触发发行包下载的裸 `gradlew`。
+
 ## 运行
 
 应用首次启动会自动创建 `QSocket` 分组和“自动负载均衡”节点。保存配置并重新打开应用后，分组会同步显示 `local.json` 中所有启用的 Local 节点。
