@@ -91,7 +91,7 @@ abstract class BoxInstance(
     }
 
     override fun launch() {
-        QSocketCore.startIfConfigured(SagerNet.application)
+        QSocketCore.startForProfile(SagerNet.application, profile)
         // TODO move, this is not box
         val cacheDir = File(SagerNet.application.cacheDir, "tmpcfg")
         cacheDir.mkdirs()

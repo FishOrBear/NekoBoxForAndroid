@@ -1,0 +1,94 @@
+package moe.matsuri.nb4a.qsocket
+
+import android.content.Context
+import io.nekohasekai.sagernet.GroupType
+import io.nekohasekai.sagernet.database.GroupManager
+import io.nekohasekai.sagernet.database.ProxyEntity
+import io.nekohasekai.sagernet.database.ProxyGroup
+import io.nekohasekai.sagernet.database.SagerDatabase
+import io.nekohasekai.sagernet.fmt.socks.SOCKSBean
+import io.nekohasekai.sagernet.ktx.applyDefaultValues
+import org.json.JSONObject
+import java.io.File
+
+object QSocketProfiles {
+    private const val GROUP_NAME = "QSocket"
+    private const val UUID_PREFIX = "qsocket:"
+    private const val AUTO_UUID = "qsocket:auto"
+
+    fun isQSocket(profile: ProxyEntity): Boolean = profile.uuid.startsWith(UUID_PREFIX)
+
+    fun ensureConfigFiles(context: Context): File {
+        val directory = File(context.filesDir, "qsocket").apply { mkdirs() }
+        val local = File(directory, "local.json")
+        val slb = File(directory, "SLBConfig.json")
+        if (!slb.exists()) slb.writeText("{}\n")
+        if (!local.exists()) {
+            local.writeText(
+                """{
+  "servers": [],
+  "slbEnabled": true,
+  "slbListen": 39002,
+  "slbSocksListen": 3902,
+  "slbConfigPath": "SLBConfig.json",
+  "slbPanelHttpsPort": 39003,
+  "slbPanelHttpPort": 39004
+}
+"""
+            )
+        }
+        return local
+    }
+
+    suspend fun synchronize(context: Context) {
+        val local = ensureConfigFiles(context)
+        val root = runCatching { JSONObject(local.readText()) }.getOrElse { JSONObject() }
+        val groupDao = SagerDatabase.groupDao
+        val proxyDao = SagerDatabase.proxyDao
+        val group = groupDao.allGroups().firstOrNull {
+            it.type == GroupType.BASIC && it.name == GROUP_NAME
+        } ?: ProxyGroup(
+            name = GROUP_NAME,
+            type = GroupType.BASIC,
+            userOrder = groupDao.nextOrder() ?: 1L,
+        ).also { it.id = groupDao.createGroup(it) }
+
+        val wanted = linkedMapOf(AUTO_UUID to ("自动负载均衡" to root.optInt("slbSocksListen", 3902)))
+        val servers = root.optJSONArray("servers")
+        if (servers != null) {
+            for (index in 0 until servers.length()) {
+                val server = servers.optJSONObject(index) ?: continue
+                if (server.optBoolean("disable") || server.optString("type") == "transport") continue
+                val name = server.optString("name").trim()
+                val listen = server.optInt("listen")
+                val socksPort = 2000 + listen - 39000
+                if (name.isNotEmpty() && socksPort in 1..65535) {
+                    wanted["qsocket:node:$name"] = name to socksPort
+                }
+            }
+        }
+
+        val existing = proxyDao.getByGroup(group.id).filter(::isQSocket).associateBy { it.uuid }
+        existing.filterKeys { it !in wanted }.values.forEach { proxyDao.deleteProxy(it) }
+        wanted.entries.forEachIndexed { order, (uuid, item) ->
+            val bean = SOCKSBean().apply {
+                serverAddress = "127.0.0.1"
+                serverPort = item.second
+                name = item.first
+                protocol = SOCKSBean.PROTOCOL_SOCKS5
+                applyDefaultValues()
+            }
+            val old = existing[uuid]
+            if (old == null) {
+                proxyDao.addProxy(ProxyEntity(groupId = group.id, uuid = uuid, userOrder = order.toLong()).apply {
+                    putBean(bean)
+                })
+            } else {
+                old.userOrder = order.toLong()
+                old.putBean(bean)
+                proxyDao.updateProxy(old)
+            }
+        }
+        GroupManager.postReload(group.id)
+    }
+}

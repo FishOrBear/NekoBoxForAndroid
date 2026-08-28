@@ -1,7 +1,7 @@
 package moe.matsuri.nb4a.qsocket
 
 import android.content.Context
-import java.io.File
+import io.nekohasekai.sagernet.database.ProxyEntity
 
 /** JNI lifecycle bridge for the bundled QSocket Rust local core. */
 object QSocketCore {
@@ -13,13 +13,10 @@ object QSocketCore {
     external fun stop()
     external fun trafficSnapshot(): String?
 
-    /**
-     * Starts QSocket when files/qsocket/local.json exists. This keeps ordinary
-     * NekoBox profiles unchanged while allowing a provisioned QSocket config to
-     * participate in the same background-service lifecycle.
-     */
-    fun startIfConfigured(context: Context): Boolean {
-        val config = File(context.filesDir, "qsocket/local.json")
-        return config.isFile && start(config.absolutePath)
+    /** 仅在当前选择的是自动生成的 QSocket 节点时启动 Rust 内核。 */
+    fun startForProfile(context: Context, profile: ProxyEntity): Boolean {
+        if (!QSocketProfiles.isQSocket(profile)) return false
+        val config = QSocketProfiles.ensureConfigFiles(context)
+        return start(config.absolutePath)
     }
 }

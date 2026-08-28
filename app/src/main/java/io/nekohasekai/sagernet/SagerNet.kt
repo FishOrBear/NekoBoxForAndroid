@@ -30,6 +30,7 @@ import kotlinx.coroutines.DEBUG_PROPERTY_VALUE_ON
 import libcore.Libcore
 import moe.matsuri.nb4a.NativeInterface
 import moe.matsuri.nb4a.net.LocalResolverImpl
+import moe.matsuri.nb4a.qsocket.QSocketProfiles
 import moe.matsuri.nb4a.utils.JavaUtil
 import moe.matsuri.nb4a.utils.cleanWebview
 import java.io.File
@@ -82,6 +83,7 @@ class SagerNet : Application(),
             Theme.apply(this)
             Theme.applyNightTheme()
             runOnDefaultDispatcher {
+                QSocketProfiles.synchronize(this@SagerNet)
                 DefaultNetworkListener.start(this) {
                     underlyingNetwork = it
                 }
