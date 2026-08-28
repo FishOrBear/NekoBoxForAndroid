@@ -30,7 +30,6 @@ object QSocketProfiles {
             local.writeText(
                 """{
   "servers": [],
-  "slbEnabled": true,
   "slbListen": 39002,
   "slbSocksListen": 3902,
   "slbConfigPath": "SLBConfig.json",
