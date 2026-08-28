@@ -24,6 +24,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import libcore.Libcore
 import moe.matsuri.nb4a.Protocols
+import moe.matsuri.nb4a.qsocket.QSocketProfiles
 import moe.matsuri.nb4a.utils.Util
 import java.net.UnknownHostException
 
@@ -146,7 +147,9 @@ class BaseService {
             }
             try {
                 return Libcore.urlTest(
-                    data!!.proxy!!.box, DataStore.connectionTestURL, 3000
+                    data!!.proxy!!.box,
+                    DataStore.connectionTestURL,
+                    if (QSocketProfiles.isQSocket(data!!.proxy!!.profile)) 12000 else 3000,
                 )
             } catch (e: Exception) {
                 error(Protocols.genFriendlyMsg(e.readableMessage))
