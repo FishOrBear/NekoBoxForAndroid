@@ -2,8 +2,6 @@ package moe.matsuri.nb4a.qsocket
 
 import android.content.Context
 import io.nekohasekai.sagernet.GroupType
-import io.nekohasekai.sagernet.SagerNet
-import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.database.GroupManager
 import io.nekohasekai.sagernet.database.ProxyEntity
 import io.nekohasekai.sagernet.database.ProxyGroup
@@ -32,6 +30,7 @@ object QSocketProfiles {
             local.writeText(
                 """{
   "servers": [],
+  "mobileColdStartProxies": 0,
   "mobileMaxProxies": 8,
   "mobileIdleTimeoutSeconds": 45,
   "mobileRotationIntervalSeconds": 300,
@@ -142,10 +141,6 @@ object QSocketProfiles {
             delay(500)
             version = configVersion(directory)
             synchronize(context)
-            val selected = SagerDatabase.proxyDao.getById(DataStore.selectedProxy)
-            if (DataStore.serviceState.started && selected?.let(::isQSocket) == true) {
-                SagerNet.reloadService()
-            }
         }
     }
 

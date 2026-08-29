@@ -15,10 +15,16 @@ object QSocketCore {
     external fun isReady(): Boolean
 
     /** 仅在当前选择的是自动生成的 QSocket 节点时启动 Rust 内核。 */
+    @Synchronized
     fun startForProfile(context: Context, profile: ProxyEntity): Boolean {
         if (!QSocketProfiles.isQSocket(profile)) return false
         val config = QSocketProfiles.ensureConfigFiles(context)
         QSocketTls.ensure(context)
         return start(config.absolutePath)
+    }
+
+    @Synchronized
+    fun shutdown() {
+        stop()
     }
 }

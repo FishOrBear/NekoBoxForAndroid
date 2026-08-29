@@ -37,6 +37,7 @@ abstract class BoxInstance(
     val externalInstances = hashMapOf<Int, AbstractInstance>()
     open lateinit var processes: GuardedProcessPool
     private var cacheFiles = ArrayList<File>()
+    protected open val stopQSocketCoreOnClose = true
     fun isInitialized(): Boolean {
         return ::config.isInitialized && ::box.isInitialized
     }
@@ -206,7 +207,7 @@ abstract class BoxInstance(
 
     @Suppress("EXPERIMENTAL_API_USAGE")
     override fun close() {
-        QSocketCore.stop()
+        if (stopQSocketCoreOnClose) QSocketCore.shutdown()
         for (instance in externalInstances.values) {
             runCatching {
                 instance.close()

@@ -253,6 +253,14 @@ class BaseService {
             }
         }
 
+        fun keepQSocketCoreForRestart(restart: Boolean): Boolean {
+            if (!restart) return false
+            val current = data.proxy?.profile ?: return false
+            if (!QSocketProfiles.isQSocket(current)) return false
+            val next = SagerDatabase.proxyDao.getById(DataStore.selectedProxy) ?: return false
+            return QSocketProfiles.isQSocket(next)
+        }
+
         fun stopRunner(restart: Boolean = false, msg: String? = null) {
             DataStore.baseService = null
             DataStore.vpnService = null
@@ -266,9 +274,11 @@ class BaseService {
 
             runOnMainDispatcher {
                 data.connectingJob?.cancelAndJoin() // ensure stop connecting first
+                val keepQSocketCore = keepQSocketCoreForRestart(restart)
                 // we use a coroutineScope here to allow clean-up in parallel
                 coroutineScope {
                     killProcesses()
+                    if (!keepQSocketCore) QSocketCore.shutdown()
                     val data = data
                     if (data.closeReceiverRegistered) {
                         unregisterReceiver(data.receiver)

@@ -12,6 +12,8 @@ import moe.matsuri.nb4a.utils.JavaUtil
 class ProxyInstance(profile: ProxyEntity, var service: BaseService.Interface? = null) :
     BoxInstance(profile) {
 
+    override val stopQSocketCoreOnClose = false
+
     var notTmp = true
 
     var lastSelectorGroupId = -1L
