@@ -27,6 +27,9 @@ https://t.me/Matsuridayo
 
 https://matsuridayo.github.io
 
+本仓库的 Windows 发布构建、正式签名和安装检查流程见
+[Android 发布包构建与安装检查](RELEASE_BUILD_NOTES.md)。
+
 ## 支持的代理协议 / Supported Proxy Protocols
 
 * SOCKS (4/4a/5)

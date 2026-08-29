@@ -8,6 +8,7 @@ build/
 .externalNativeBuild
 .cxx
 local.properties
+/build-env.local.ps1
 /app/libs/
 /app/src/main/assets/sing-box
 /service_account_credentials.json
@@ -17,6 +18,7 @@ jniLibs/
 /nkmr
 /.gopath/
 /.tools/
+/.runtime/
 /rust-core/target/
 
 # submodules

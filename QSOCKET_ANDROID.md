@@ -18,11 +18,13 @@ git submodule update --init --recursive
 .\build-rust-core.ps1 -Profile release
 ```
 
-脚本会为 NekoBox 支持的四种 Android ABI 构建 `libqsocket_local.so`，并复制到对应的 `app/src/main/jniLibs` 目录。
+脚本默认只为 `arm64-v8a` 构建 `libqsocket_local.so`，并复制到 `app/src/main/jniLibs/arm64-v8a`。只有明确需要其他架构时才通过 `-Abi` 指定。
+
+每台电脑应把 `build-env.example.ps1` 复制为 Git 忽略的 `build-env.local.ps1`，在其中配置自己的 SDK、NDK、Cargo 和 target 路径。更新 `third_party/qsocket-tcp` 后必须重新运行本脚本，不能直接复用旧 `.so`。
 
 ## 本机离线构建缓存
 
-当前 Windows 开发机的工具链和缓存都在 H 盘：
+另一台 Windows 开发机的工具链和缓存位于 H 盘；这些路径不适用于当前电脑：
 
 ```text
 JAVA_HOME=H:\Android\jdk17\jdk-17.0.20.1+1
