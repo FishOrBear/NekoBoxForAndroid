@@ -16,7 +16,7 @@ object QSocketProfiles {
     private const val GROUP_NAME = "QSocket"
     private const val UUID_PREFIX = "qsocket:"
     private const val AUTO_UUID = "qsocket:auto"
-    private const val PANEL_ASSET_VERSION = "7022307a988c94dc2ca6-memory1"
+    private const val PANEL_ASSET_VERSION = "2db48db1ccf76f51e91d-vps1"
 
     fun isQSocket(profile: ProxyEntity): Boolean = profile.uuid.startsWith(UUID_PREFIX)
 
